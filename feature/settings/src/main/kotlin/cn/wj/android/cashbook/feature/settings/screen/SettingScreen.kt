@@ -48,8 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.wj.android.cashbook.core.common.ApplicationInfo
-import cn.wj.android.cashbook.core.common.PASSWORD_REGEX
-import cn.wj.android.cashbook.core.common.tools.isMatch
 import cn.wj.android.cashbook.core.design.component.CbAlertDialog
 import cn.wj.android.cashbook.core.design.component.CbHorizontalDivider
 import cn.wj.android.cashbook.core.design.component.CbListItem
@@ -648,7 +646,6 @@ internal fun CreatePasswordDialog(
     // 提示文本
     val passwordMustNotBeBlankText = stringResource(id = R.string.password_must_not_be_blank)
     val passwordConfirmFailedText = stringResource(id = R.string.password_confirm_failed)
-    val passwordFormatErrorText = stringResource(id = R.string.password_format_error)
     val passwordEncodeFailedText = stringResource(id = R.string.password_encode_failed)
 
     var pwdState by remember {
@@ -657,12 +654,12 @@ internal fun CreatePasswordDialog(
 
     val password = remember {
         TextFieldState(
-            validator = { it.isMatch(PASSWORD_REGEX) },
+            validator = { it.isNotBlank() },
             errorFor = {
                 if (it.isBlank()) {
                     passwordMustNotBeBlankText
                 } else {
-                    passwordFormatErrorText
+                    ""
                 }
             },
         )
@@ -670,11 +667,10 @@ internal fun CreatePasswordDialog(
 
     val passwordAgain = remember {
         TextFieldState(
-            validator = { it.isMatch(PASSWORD_REGEX) && it == password.text && pwdState != SettingPasswordStateEnum.PASSWORD_ENCODE_FAILED },
+            validator = { it.isNotBlank() && it == password.text && pwdState != SettingPasswordStateEnum.PASSWORD_ENCODE_FAILED },
             errorFor = {
                 when {
                     it.isEmpty() -> passwordMustNotBeBlankText
-                    !it.isMatch(PASSWORD_REGEX) -> passwordFormatErrorText
                     it != password.text -> passwordConfirmFailedText
                     pwdState == SettingPasswordStateEnum.PASSWORD_ENCODE_FAILED -> passwordEncodeFailedText
                     else -> ""
@@ -738,7 +734,6 @@ internal fun ModifyPasswordDialog(
     // 提示文本
     val passwordMustNotBeBlankText = stringResource(id = R.string.password_must_not_be_blank)
     val passwordCannotBeSameText = stringResource(id = R.string.password_cannot_be_same)
-    val passwordFormatErrorText = stringResource(id = R.string.password_format_error)
     val passwordEncodeFailedText = stringResource(id = R.string.password_encode_failed)
     val passwordDecodeFailedText = stringResource(id = R.string.password_decode_failed)
     val passwordWrongText = stringResource(id = R.string.password_wrong)
@@ -750,14 +745,13 @@ internal fun ModifyPasswordDialog(
     val passwordOld = remember {
         TextFieldState(
             validator = {
-                it.isMatch(PASSWORD_REGEX) &&
+                it.isNotBlank() &&
                     pwdState != SettingPasswordStateEnum.PASSWORD_WRONG &&
                     pwdState != SettingPasswordStateEnum.PASSWORD_DECODE_FAILED
             },
             errorFor = {
                 when {
                     it.isBlank() -> passwordMustNotBeBlankText
-                    !it.isMatch(PASSWORD_REGEX) -> passwordFormatErrorText
                     pwdState == SettingPasswordStateEnum.PASSWORD_DECODE_FAILED -> passwordDecodeFailedText
                     pwdState == SettingPasswordStateEnum.PASSWORD_WRONG -> passwordWrongText
                     else -> ""
@@ -768,11 +762,10 @@ internal fun ModifyPasswordDialog(
 
     val passwordNew = remember {
         TextFieldState(
-            validator = { it.isMatch(PASSWORD_REGEX) && it != passwordOld.text },
+            validator = { it.isNotBlank() && it != passwordOld.text },
             errorFor = {
                 when {
                     it.isEmpty() -> passwordEncodeFailedText
-                    !it.isMatch(PASSWORD_REGEX) -> passwordFormatErrorText
                     it == passwordOld.text -> passwordCannotBeSameText
                     pwdState == SettingPasswordStateEnum.PASSWORD_ENCODE_FAILED -> passwordEncodeFailedText
                     else -> ""
@@ -838,7 +831,6 @@ internal fun VerityPasswordDialog(
     // 提示文本
     val passwordMustNotBeBlankText = stringResource(id = R.string.password_must_not_be_blank)
     val passwordWrongText = stringResource(id = R.string.password_wrong)
-    val passwordFormatErrorText = stringResource(id = R.string.password_format_error)
     val passwordDecodeFailedText = stringResource(id = R.string.password_decode_failed)
 
     var pwdState by remember {
@@ -848,14 +840,13 @@ internal fun VerityPasswordDialog(
     val password = remember {
         TextFieldState(
             validator = {
-                it.isMatch(PASSWORD_REGEX) &&
+                it.isNotBlank() &&
                     pwdState != SettingPasswordStateEnum.PASSWORD_WRONG &&
                     pwdState != SettingPasswordStateEnum.PASSWORD_DECODE_FAILED
             },
             errorFor = {
                 when {
                     it.isBlank() -> passwordMustNotBeBlankText
-                    !it.isMatch(PASSWORD_REGEX) -> passwordFormatErrorText
                     pwdState == SettingPasswordStateEnum.PASSWORD_DECODE_FAILED -> passwordDecodeFailedText
                     pwdState == SettingPasswordStateEnum.PASSWORD_WRONG -> passwordWrongText
                     else -> ""
@@ -914,7 +905,6 @@ internal fun ClearPasswordDialog(
     // 提示文本
     val passwordMustNotBeBlankText = stringResource(id = R.string.password_must_not_be_blank)
     val passwordWrongText = stringResource(id = R.string.password_wrong)
-    val passwordFormatErrorText = stringResource(id = R.string.password_format_error)
     val passwordDecodeFailedText = stringResource(id = R.string.password_decode_failed)
 
     var pwdState by remember {
@@ -924,14 +914,13 @@ internal fun ClearPasswordDialog(
     val password = remember {
         TextFieldState(
             validator = {
-                it.isMatch(PASSWORD_REGEX) &&
+                it.isNotBlank() &&
                     pwdState != SettingPasswordStateEnum.PASSWORD_WRONG &&
                     pwdState != SettingPasswordStateEnum.PASSWORD_DECODE_FAILED
             },
             errorFor = {
                 when {
                     it.isBlank() -> passwordMustNotBeBlankText
-                    !it.isMatch(PASSWORD_REGEX) -> passwordFormatErrorText
                     pwdState == SettingPasswordStateEnum.PASSWORD_DECODE_FAILED -> passwordDecodeFailedText
                     pwdState == SettingPasswordStateEnum.PASSWORD_WRONG -> passwordWrongText
                     else -> ""

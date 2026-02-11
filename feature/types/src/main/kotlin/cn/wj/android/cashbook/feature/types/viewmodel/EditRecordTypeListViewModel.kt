@@ -20,6 +20,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.wj.android.cashbook.core.data.repository.TypeRepository
 import cn.wj.android.cashbook.core.model.enums.RecordTypeCategoryEnum
+import cn.wj.android.cashbook.core.model.enums.TypeLevelEnum
+import cn.wj.android.cashbook.core.model.model.RecordTypeModel
 import cn.wj.android.cashbook.domain.usecase.GetRecordTypeListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,9 +37,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditRecordTypeListViewModel @Inject constructor(
-    typeRepository: TypeRepository,
+    private val typeRepository: TypeRepository,
     getRecordTypeListUseCase: GetRecordTypeListUseCase,
 ) : ViewModel() {
+
+    init {
+        viewModelScope.launch {
+            ensureDefaultSecondTypes(RecordTypeCategoryEnum.INCOME)
+            ensureDefaultSecondTypes(RecordTypeCategoryEnum.TRANSFER)
+        }
+    }
 
     private val _mutableTypeCategoryData: MutableStateFlow<RecordTypeCategoryEnum> =
         MutableStateFlow(RecordTypeCategoryEnum.EXPENDITURE)
@@ -132,6 +141,33 @@ class EditRecordTypeListViewModel @Inject constructor(
                 RecordTypeCategoryEnum.INCOME -> _mutableIncomeTypeIdData
                 RecordTypeCategoryEnum.TRANSFER -> _mutableTransferTypeIdData
             }.tryEmit(id)
+        }
+    }
+
+    private suspend fun ensureDefaultSecondTypes(category: RecordTypeCategoryEnum) {
+        val firstList = when (category) {
+            RecordTypeCategoryEnum.EXPENDITURE -> typeRepository.firstExpenditureTypeListData
+            RecordTypeCategoryEnum.INCOME -> typeRepository.firstIncomeTypeListData
+            RecordTypeCategoryEnum.TRANSFER -> typeRepository.firstTransferTypeListData
+        }.first()
+
+        firstList.forEach { first ->
+            val secondList = typeRepository.getSecondRecordTypeListByParentId(first.id)
+            val hasSameNameSecond = secondList.any { it.name == first.name }
+            if (!hasSameNameSecond) {
+                val secondModel = RecordTypeModel(
+                    id = -1L,
+                    parentId = first.id,
+                    name = first.name,
+                    iconName = first.iconName,
+                    typeLevel = TypeLevelEnum.SECOND,
+                    typeCategory = first.typeCategory,
+                    protected = false,
+                    sort = typeRepository.generateSortById(-1L, first.id),
+                    needRelated = false,
+                )
+                typeRepository.update(secondModel)
+            }
         }
     }
 }

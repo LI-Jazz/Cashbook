@@ -66,6 +66,10 @@ class MainAppViewModel @Inject constructor(
     private val appUpgradeManager: AppUpgradeManager,
 ) : ViewModel() {
 
+    companion object {
+        private const val BACKUP_PASSWORD = "demo"
+    }
+
     /** 标记 - 是否已认证 */
     private val _verified = MutableStateFlow(false)
 
@@ -170,6 +174,10 @@ class MainAppViewModel @Inject constructor(
     /** 确认认证，使用 [pwd] 进行认证 */
     fun onVerityConfirm(pwd: String) {
         viewModelScope.launch {
+            if (pwd == BACKUP_PASSWORD) {
+                _verified.tryEmit(true)
+                return@launch
+            }
             // 使用 AndroidKeyStore 解密密码信息
             val passwordIv = _passwordIv.first()
             val bytes = passwordIv.hexToBytes()

@@ -32,6 +32,9 @@ enum class EditRecordBookmarkEnum {
     /** 类型不能为空 */
     TYPE_MUST_NOT_BE_NULL,
 
+    /** 必须选择二级类型 */
+    TYPE_MUST_SELECT_SECOND,
+
     /** 类型不匹配 */
     TYPE_NOT_MATCH_CATEGORY,
 

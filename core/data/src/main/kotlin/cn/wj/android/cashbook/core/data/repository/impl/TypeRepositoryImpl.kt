@@ -185,6 +185,13 @@ class TypeRepositoryImpl @Inject constructor(
         typeDataVersion.updateVersion()
     }
 
+    override suspend fun insertAndReturnId(model: RecordTypeModel): Long =
+        withContext(coroutineContext) {
+            val id = typeDao.insertOrReplace(model.asTable())
+            typeDataVersion.updateVersion()
+            id
+        }
+
     override suspend fun generateSortById(id: Long, parentId: Long): Int =
         withContext(coroutineContext) {
             var sort = getRecordTypeById(id)?.sort ?: -1

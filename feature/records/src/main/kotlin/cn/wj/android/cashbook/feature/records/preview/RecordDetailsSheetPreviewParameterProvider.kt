@@ -68,7 +68,7 @@ object RecordDetailsSheetData {
         relatedImage = emptyList(),
         relatedRecord = emptyList(),
         relatedAmount = "",
-        recordTime = "2024-04-01 ",
+        recordTime = "2024-04-01",
     )
 
     private val reimbursedExpenditureRecordViewsData = RecordViewsEntity(
@@ -92,7 +92,7 @@ object RecordDetailsSheetData {
         relatedImage = emptyList(),
         relatedRecord = relatedRecordList,
         relatedAmount = "20",
-        recordTime = "2024-04-01 ",
+        recordTime = "2024-04-01",
     )
 
     private val reimbursableExpenditureRecordViewsData = RecordViewsEntity(
@@ -116,7 +116,7 @@ object RecordDetailsSheetData {
         relatedImage = emptyList(),
         relatedRecord = emptyList(),
         relatedAmount = "",
-        recordTime = "2024-04-01 ",
+        recordTime = "2024-04-01",
     )
 
     private val refundExpenditureRecordViewsData = RecordViewsEntity(
@@ -140,7 +140,7 @@ object RecordDetailsSheetData {
         relatedImage = emptyList(),
         relatedRecord = relatedRecordList,
         relatedAmount = "20",
-        recordTime = "2024-04-01 ",
+        recordTime = "2024-04-01",
     )
 
     private val incomeRecordViewsData = RecordViewsEntity(
@@ -164,7 +164,7 @@ object RecordDetailsSheetData {
         relatedImage = emptyList(),
         relatedRecord = emptyList(),
         relatedAmount = "",
-        recordTime = "2024-04-01 ",
+        recordTime = "2024-04-01",
     )
 
     private val refundIncomeRecordViewsData = RecordViewsEntity(
@@ -188,7 +188,7 @@ object RecordDetailsSheetData {
         relatedImage = emptyList(),
         relatedRecord = relatedRecordList,
         relatedAmount = "2000",
-        recordTime = "2024-04-01 ",
+        recordTime = "2024-04-01",
     )
 
     private val reimbursedIncomeRecordViewsData = RecordViewsEntity(
@@ -212,7 +212,7 @@ object RecordDetailsSheetData {
         relatedImage = emptyList(),
         relatedRecord = relatedRecordList,
         relatedAmount = "20",
-        recordTime = "2024-04-01 ",
+        recordTime = "2024-04-01",
     )
 
     private val transferRecordViewsData = RecordViewsEntity(
@@ -236,7 +236,7 @@ object RecordDetailsSheetData {
         relatedImage = emptyList(),
         relatedRecord = emptyList(),
         relatedAmount = "",
-        recordTime = "2024-04-01 ",
+        recordTime = "2024-04-01",
     )
 
     val recordViewsList = arrayListOf(

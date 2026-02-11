@@ -623,12 +623,13 @@ internal fun RecordListItem(
                 text = buildAnnotatedString {
                     if (showDate) {
                         append(item.recordTime)
-                    } else {
-                        append(item.recordTime.split(" ").last())
                     }
                     if (showRemarks) {
                         withStyle(SpanStyle(color = LocalContentColor.current.copy(alpha = 0.7f))) {
-                            append("  ${item.remark}")
+                            if (length > 0) {
+                                append("  ")
+                            }
+                            append(item.remark)
                         }
                     }
                 },

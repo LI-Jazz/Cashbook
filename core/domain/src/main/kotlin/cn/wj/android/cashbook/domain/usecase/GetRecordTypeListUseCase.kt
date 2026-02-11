@@ -77,32 +77,26 @@ class GetRecordTypeListUseCase @Inject constructor(
                     } else {
                         first.id == selectedEntity.parentId
                     }
-                    // 更新类型选中状态并添加到结果中
-                    result.add(first.copy(selected = selected))
-                    if (selected) {
-                        // 如果一级类型选中，向后面添加它的二级类型
-                        val childCount = first.child.size
-                        first.child.forEachIndexed { index, second ->
-                            // 二级分类是否选中
-                            val secondSelected = if (selectFirst) {
-                                false
-                            } else {
-                                second.id == selectedEntity.id
-                            }
-                            // 判断是第一个还是最后一个
-                            val shapeType = when (index) {
-                                0 -> -1
-                                childCount - 1 -> 1
-                                else -> 0
-                            }
-                            result.add(
-                                second.copy(
-                                    selected = secondSelected,
-                                    shapeType = shapeType,
-                                ),
-                            )
+                    // 更新二级类型选中状态与形状
+                    val childCount = first.child.size
+                    val updatedChild = first.child.mapIndexed { index, second ->
+                        val secondSelected = if (selectFirst) {
+                            false
+                        } else {
+                            second.id == selectedEntity.id
                         }
+                        val shapeType = when (index) {
+                            0 -> -1
+                            childCount - 1 -> 1
+                            else -> 0
+                        }
+                        second.copy(
+                            selected = secondSelected,
+                            shapeType = shapeType,
+                        )
                     }
+                    // 更新类型选中状态并添加到结果中（保留完整二级列表）
+                    result.add(first.copy(selected = selected, child = updatedChild))
                 }
                 // 在末尾添加设置数据
                 result.add(RECORD_TYPE_SETTINGS)

@@ -79,10 +79,14 @@ import cn.wj.android.cashbook.core.design.component.Footer
 import cn.wj.android.cashbook.core.design.component.Loading
 import cn.wj.android.cashbook.core.design.component.TextFieldState
 import cn.wj.android.cashbook.core.design.component.painterDrawableResource
+import cn.wj.android.cashbook.core.design.preview.PreviewTheme
 import cn.wj.android.cashbook.core.design.icon.CbIcons
 import cn.wj.android.cashbook.core.design.theme.LocalExtendedColors
+import cn.wj.android.cashbook.core.model.enums.TypeLevelEnum
+import cn.wj.android.cashbook.core.model.model.RecordTypeModel
 import cn.wj.android.cashbook.core.model.enums.RecordTypeCategoryEnum
 import cn.wj.android.cashbook.core.ui.DialogState
+import cn.wj.android.cashbook.core.ui.DevicePreviews
 import cn.wj.android.cashbook.core.ui.R
 import cn.wj.android.cashbook.core.ui.component.TypeIcon
 import cn.wj.android.cashbook.feature.types.enums.MyCategoriesBookmarkEnum
@@ -1025,4 +1029,108 @@ internal fun MyCategoriesTopBar(
             }
         },
     )
+}
+
+@DevicePreviews
+@Composable
+private fun MyCategoriesScreenPreview() {
+    PreviewTheme {
+        MyCategoriesScreen(
+            shouldDisplayBookmark = MyCategoriesBookmarkEnum.DISMISS,
+            onRequestDismissBookmark = {},
+            dialogState = DialogState.Dismiss,
+            onRequestDismissDialog = {},
+            uiState = MyCategoriesUiState.Success(
+                selectedTab = RecordTypeCategoryEnum.EXPENDITURE,
+                typeList = listOf(
+                    ExpandableRecordTypeModel(
+                        data = RecordTypeModel(
+                            id = 1L,
+                            parentId = -1L,
+                            name = "餐饮",
+                            iconName = "vector_type_three_meals_24",
+                            typeLevel = TypeLevelEnum.FIRST,
+                            typeCategory = RecordTypeCategoryEnum.EXPENDITURE,
+                            protected = false,
+                            sort = 0,
+                            needRelated = false,
+                        ),
+                        reimburseType = false,
+                        refundType = false,
+                        creditCardPaymentType = false,
+                        list = listOf(
+                            ExpandableRecordTypeModel(
+                                data = RecordTypeModel(
+                                    id = 11L,
+                                    parentId = 1L,
+                                    name = "早餐",
+                                    iconName = "vector_type_three_meals_24",
+                                    typeLevel = TypeLevelEnum.SECOND,
+                                    typeCategory = RecordTypeCategoryEnum.EXPENDITURE,
+                                    protected = false,
+                                    sort = 0,
+                                    needRelated = false,
+                                ),
+                                reimburseType = false,
+                                refundType = false,
+                                creditCardPaymentType = false,
+                                list = emptyList(),
+                            ),
+                            ExpandableRecordTypeModel(
+                                data = RecordTypeModel(
+                                    id = 12L,
+                                    parentId = 1L,
+                                    name = "晚餐",
+                                    iconName = "vector_type_three_meals_24",
+                                    typeLevel = TypeLevelEnum.SECOND,
+                                    typeCategory = RecordTypeCategoryEnum.EXPENDITURE,
+                                    protected = false,
+                                    sort = 1,
+                                    needRelated = false,
+                                ),
+                                reimburseType = false,
+                                refundType = false,
+                                creditCardPaymentType = false,
+                                list = emptyList(),
+                            ),
+                        ),
+                    ),
+                    ExpandableRecordTypeModel(
+                        data = RecordTypeModel(
+                            id = 2L,
+                            parentId = -1L,
+                            name = "交通",
+                            iconName = "vector_type_three_meals_24",
+                            typeLevel = TypeLevelEnum.FIRST,
+                            typeCategory = RecordTypeCategoryEnum.EXPENDITURE,
+                            protected = false,
+                            sort = 1,
+                            needRelated = false,
+                        ),
+                        reimburseType = false,
+                        refundType = false,
+                        creditCardPaymentType = false,
+                        list = emptyList(),
+                    ),
+                ),
+            ),
+            onRequestSelectTypeCategory = {},
+            onRequestEditType = {},
+            onRequestChangeFirstTypeToSecond = {},
+            onRequestAddFirstType = {},
+            onRequestAddSecondType = {},
+            changeFirstTypeToSecond = { _, _ -> },
+            onRequestChangeSecondTypeToFirst = {},
+            onRequestMoveSecondTypeToAnother = { _, _ -> },
+            onRequestSetRefundType = {},
+            onRequestSetReimburseType = {},
+            onRequestSetCreditCardPaymentType = {},
+            onRequestNaviToTypeStatistics = {},
+            onRequestDeleteType = {},
+            changeRecordTypeBeforeDelete = { _, _ -> },
+            onRequestSaveRecordType = { _, _, _, _ -> },
+            onRequestPopBackStack = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
 }

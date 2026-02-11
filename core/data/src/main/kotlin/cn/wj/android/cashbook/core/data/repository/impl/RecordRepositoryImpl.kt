@@ -25,10 +25,8 @@ import cn.wj.android.cashbook.core.common.model.assetDataVersion
 import cn.wj.android.cashbook.core.common.model.recordDataVersion
 import cn.wj.android.cashbook.core.common.model.updateVersion
 import cn.wj.android.cashbook.core.common.tools.DATE_FORMAT_DATE
-import cn.wj.android.cashbook.core.common.tools.DATE_FORMAT_NO_SECONDS
 import cn.wj.android.cashbook.core.common.tools.dateFormat
 import cn.wj.android.cashbook.core.common.tools.parseDateLong
-import cn.wj.android.cashbook.core.common.tools.toLongTime
 import cn.wj.android.cashbook.core.data.repository.RecordRepository
 import cn.wj.android.cashbook.core.data.repository.asModel
 import cn.wj.android.cashbook.core.data.repository.asTable
@@ -259,7 +257,7 @@ class RecordRepositoryImpl @Inject constructor(
                 concessions = "",
                 remark = "",
                 reimbursable = false,
-                recordTime = System.currentTimeMillis().dateFormat(DATE_FORMAT_NO_SECONDS),
+                recordTime = System.currentTimeMillis().dateFormat(DATE_FORMAT_DATE),
             )
         }
 
@@ -285,7 +283,7 @@ class RecordRepositoryImpl @Inject constructor(
             val calendar = Calendar.getInstance()
             calendar[Calendar.DAY_OF_MONTH] = -90
             val startDate =
-                "${calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE)} 00:00:00".toLongTime()!!
+                calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE).parseDateLong(DATE_FORMAT_DATE)
             val appDataModel = combineProtoDataSource.recordSettingsData.first()
             recordDao.getExpenditureRecordListAfterTime(
                 booksId = appDataModel.currentBookId,
@@ -299,7 +297,7 @@ class RecordRepositoryImpl @Inject constructor(
             val calendar = Calendar.getInstance()
             calendar[Calendar.DAY_OF_MONTH] = -90
             val startDate =
-                "${calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE)} 00:00:00".toLongTime()!!
+                calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE).parseDateLong(DATE_FORMAT_DATE)
             val appDataModel = combineProtoDataSource.recordSettingsData.first()
             recordDao.getExpenditureReimburseRecordListAfterTime(
                 booksId = appDataModel.currentBookId,
@@ -313,7 +311,7 @@ class RecordRepositoryImpl @Inject constructor(
             val calendar = Calendar.getInstance()
             calendar[Calendar.DAY_OF_MONTH] = -90
             val startDate =
-                "${calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE)} 00:00:00".toLongTime()!!
+                calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE).parseDateLong(DATE_FORMAT_DATE)
             val appDataModel = combineProtoDataSource.recordSettingsData.first()
             recordDao.getExpenditureRecordListByKeywordAfterTime(
                 keyword = keyword,
@@ -328,7 +326,7 @@ class RecordRepositoryImpl @Inject constructor(
             val calendar = Calendar.getInstance()
             calendar[Calendar.DAY_OF_MONTH] = -90
             val startDate =
-                "${calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE)} 00:00:00".toLongTime()!!
+                calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE).parseDateLong(DATE_FORMAT_DATE)
             recordDao.getRecordCountByAssetIdAfterTime(assetId, startDate)
         }
 
@@ -338,7 +336,7 @@ class RecordRepositoryImpl @Inject constructor(
             val calendar = Calendar.getInstance()
             calendar[Calendar.DAY_OF_MONTH] = -90
             val startDate =
-                "${calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE)} 00:00:00".toLongTime()!!
+                calendar.timeInMillis.dateFormat(DATE_FORMAT_DATE).parseDateLong(DATE_FORMAT_DATE)
             val appDataModel = combineProtoDataSource.recordSettingsData.first()
             recordDao.getLastThreeMonthExpenditureReimburseRecordListByKeyword(
                 keyword = keyword,

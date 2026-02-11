@@ -66,6 +66,8 @@ interface TypeRepository {
 
     suspend fun update(model: RecordTypeModel)
 
+    suspend fun insertAndReturnId(model: RecordTypeModel): Long
+
     suspend fun generateSortById(id: Long, parentId: Long): Int
 
     suspend fun isCreditPaymentType(typeId: Long): Boolean

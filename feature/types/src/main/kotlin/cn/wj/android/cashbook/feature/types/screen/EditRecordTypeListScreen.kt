@@ -16,37 +16,34 @@
 
 package cn.wj.android.cashbook.feature.types.screen
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ElevatedFilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.wj.android.cashbook.core.common.RECORD_TYPE_COLUMNS
-import cn.wj.android.cashbook.core.design.component.CbVerticalGrid
-import cn.wj.android.cashbook.core.design.component.painterDrawableResource
-import cn.wj.android.cashbook.core.design.theme.fixedContainerColorFor
+import cn.wj.android.cashbook.core.design.icon.CbIcons
 import cn.wj.android.cashbook.core.model.entity.RECORD_TYPE_SETTINGS
 import cn.wj.android.cashbook.core.model.entity.RecordTypeEntity
 import cn.wj.android.cashbook.core.model.enums.RecordTypeCategoryEnum
-import cn.wj.android.cashbook.core.ui.R
-import cn.wj.android.cashbook.core.ui.component.TypeIcon
 import cn.wj.android.cashbook.core.ui.expand.typeColor
 import cn.wj.android.cashbook.feature.types.viewmodel.EditRecordTypeListViewModel
 
@@ -56,14 +53,12 @@ import cn.wj.android.cashbook.feature.types.viewmodel.EditRecordTypeListViewMode
  * @param typeCategory 记录大类
  * @param defaultTypeId 默认类型 id
  * @param onTypeSelect 类型选中回调
- * @param onRequestNaviToTypeManager 导航到类型管理
  */
 @Composable
 internal fun EditRecordTypeListRoute(
     typeCategory: RecordTypeCategoryEnum,
     defaultTypeId: Long,
     onTypeSelect: (Long) -> Unit,
-    onRequestNaviToTypeManager: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: EditRecordTypeListViewModel = hiltViewModel<EditRecordTypeListViewModel>().apply {
         update(typeCategory, defaultTypeId)
@@ -84,7 +79,6 @@ internal fun EditRecordTypeListRoute(
         currentTypeCategory = currentTypeCategory,
         typeList = typeList,
         onTypeSelect = viewModel::updateTypeId,
-        onTypeSettingClick = onRequestNaviToTypeManager,
         modifier = modifier,
     )
 }
@@ -93,125 +87,97 @@ internal fun EditRecordTypeListRoute(
  * 编辑记录页面标签列表
  *
  * @param onTypeSelect 类型选中回调
- * @param onTypeSettingClick 类型设置点击
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun EditRecordTypeListScreen(
     currentTypeCategory: RecordTypeCategoryEnum,
     typeList: List<RecordTypeEntity>,
     onTypeSelect: (Long) -> Unit,
-    onTypeSettingClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val typeColor = currentTypeCategory.typeColor
-    CbVerticalGrid(
-        modifier = modifier,
-        columns = RECORD_TYPE_COLUMNS,
-        items = typeList,
-    ) { type ->
-        if (type == RECORD_TYPE_SETTINGS) {
-            // 设置项
-            TypeItem(
-                modifier = Modifier.fillMaxWidth(),
-                first = true,
-                shapeType = type.shapeType,
-                iconPainter = painterResource(id = R.drawable.vector_baseline_settings_24),
-                typeColor = typeColor,
-                showMore = false,
-                title = stringResource(id = R.string.settings),
-                selected = true,
-                onTypeClick = onTypeSettingClick,
-            )
-        } else {
-            TypeItem(
-                modifier = Modifier.fillMaxWidth(),
-                first = type.parentId == -1L,
-                shapeType = type.shapeType,
-                iconPainter = painterDrawableResource(idStr = type.iconResName),
-                typeColor = typeColor,
-                showMore = type.child.isNotEmpty(),
-                title = type.name,
-                selected = type.selected,
-                onTypeClick = {
-                    val selected = if (!type.selected) {
-                        // 当前为选中，更新为选中
-                        type.copy(selected = true)
-                    } else {
-                        // 当前已选中，取消选中
-                        if (type.parentId != -1L) {
-                            // 二级分类，选择父类型
-                            (
-                                typeList.firstOrNull { it.id == type.parentId }
-                                    ?: typeList.first()
-                                ).copy(selected = true)
-                        } else {
-                            // 一级分类，无法取消，不做处理
-                            null
-                        }
-                    }
-                    selected?.let { onTypeSelect(it.id) }
-                },
-            )
-        }
-    }
-}
+    val firstTypeList = typeList.filter { it.parentId == -1L && it != RECORD_TYPE_SETTINGS }
+    val expandedStateMap = remember { mutableStateMapOf<Long, Boolean>() }
 
-/**
- * 类型列表 item
- *
- * @param first 是否是一级类型
- * @param shapeType 背景 shape 类型
- * @param iconPainter 显示图片
- * @param showMore 是否显示更多标记
- * @param title 类型标题
- * @param selected 是否被选中
- * @param onTypeClick 类型点击回调
- */
-@Composable
-internal fun TypeItem(
-    first: Boolean,
-    shapeType: Int,
-    iconPainter: Painter,
-    typeColor: Color,
-    showMore: Boolean,
-    title: String,
-    selected: Boolean,
-    onTypeClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    // 背景颜色，用于区分一级分类、二级分类
-    val backgroundColor =
-        if (first) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
-    val backgroundShape = if (first) {
-        RectangleShape
-    } else {
-        when (shapeType) {
-            -1 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
-            1 -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
-            else -> RectangleShape
+    Column(modifier = modifier) {
+        firstTypeList.forEach { first ->
+            // 一级类型：单独占一行
+            val hasChild = first.child.isNotEmpty()
+            val defaultExpanded = first.child.any { it.selected }
+            val isExpanded = expandedStateMap[first.id] ?: defaultExpanded
+
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .then(
+                        if (hasChild) {
+                            Modifier.clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                            ) {
+                                expandedStateMap[first.id] = !isExpanded
+                            }
+                        } else {
+                            Modifier
+                        },
+                    ),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = first.name,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (hasChild) {
+                    Icon(
+                        imageVector = if (isExpanded) {
+                            CbIcons.KeyboardArrowDown
+                        } else {
+                            CbIcons.KeyboardArrowRight
+                        },
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            if (hasChild && isExpanded) {
+                // 二级类型：默认合上，可展开
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+                ) {
+                    first.child.forEach { second ->
+                        ElevatedFilterChip(
+                            selected = second.selected,
+                            onClick = {
+                                if (!second.selected) {
+                                    onTypeSelect(second.id)
+                                } else {
+                                    val parent =
+                                        firstTypeList.firstOrNull { it.id == second.parentId }
+                                            ?: firstTypeList.firstOrNull()
+                                    parent?.let { onTypeSelect(it.id) }
+                                }
+                            },
+                            label = { Text(text = second.name) },
+                            modifier = Modifier,
+                            shape = RoundedCornerShape(6.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = typeColor,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                labelColor = MaterialTheme.colorScheme.onSurface,
+                            ),
+                        )
+                    }
+                }
+            }
         }
-    }
-    // 列表数据
-    Column(
-        modifier = modifier
-            .background(color = backgroundColor, shape = backgroundShape)
-            .clickable(onClick = onTypeClick)
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        // 根据选中状态显示主要颜色
-        val color = if (selected) typeColor else fixedContainerColorFor(color = typeColor)
-        // 记录类型对应的图标，使用圆形边框
-        TypeIcon(
-            painter = iconPainter,
-            containerColor = color,
-            showMore = showMore,
-        )
-        // 类型名称
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelMedium,
-        )
+
     }
 }

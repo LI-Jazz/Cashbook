@@ -124,6 +124,7 @@ fun NavController.naviToSearch() {
  * @param typeListContent 类型列表布局，参数：(类型大类, 默认类型 id, 类型选择回调) -> [Unit]
  * @param assetBottomSheetContent 选择资产抽屉布局，参数：(已选择类型id, 已选择资产id, 是否是关联资产, 资产选择回调) -> [Unit]
  * @param tagBottomSheetContent 选择标签抽屉布局，参数：(已选择标签id列表, 标签id列表变化回调) -> [Unit]
+ * @param onRequestNaviToTypeManager 导航到类型管理
  * @param onRequestPopBackStack 导航到上一级
  */
 fun NavGraphBuilder.editRecordScreen(
@@ -131,6 +132,7 @@ fun NavGraphBuilder.editRecordScreen(
     assetBottomSheetContent: @Composable (Long, Long, Boolean, (Long) -> Unit) -> Unit,
     tagBottomSheetContent: @Composable (List<Long>, (List<Long>) -> Unit, () -> Unit) -> Unit,
     onRequestNaviToSelectRelatedRecord: () -> Unit,
+    onRequestNaviToTypeManager: () -> Unit,
     onRequestPopBackStack: () -> Unit,
 ) {
     composable(
@@ -153,6 +155,7 @@ fun NavGraphBuilder.editRecordScreen(
             assetBottomSheetContent = assetBottomSheetContent,
             tagBottomSheetContent = tagBottomSheetContent,
             onRequestNaviToSelectRelatedRecord = onRequestNaviToSelectRelatedRecord,
+            onRequestNaviToTypeManager = onRequestNaviToTypeManager,
             onRequestPopBackStack = onRequestPopBackStack,
         )
     }

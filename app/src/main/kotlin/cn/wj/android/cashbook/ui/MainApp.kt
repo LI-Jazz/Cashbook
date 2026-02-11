@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -50,13 +51,14 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import cn.wj.android.cashbook.core.common.PASSWORD_REGEX
 import cn.wj.android.cashbook.core.common.SHORTCUTS_TYPE_ADD
 import cn.wj.android.cashbook.core.common.SHORTCUTS_TYPE_ASSET
 import cn.wj.android.cashbook.core.common.TestTag
@@ -75,6 +77,7 @@ import cn.wj.android.cashbook.core.design.icon.CbIcons
 import cn.wj.android.cashbook.core.design.security.biometric.BiometricAuthenticate
 import cn.wj.android.cashbook.core.design.security.biometric.BiometricAuthenticateHintData
 import cn.wj.android.cashbook.core.design.security.biometric.ProvideBiometricAuthenticateHintData
+import cn.wj.android.cashbook.core.design.theme.CashbookTheme
 import cn.wj.android.cashbook.core.model.entity.UpgradeInfoEntity
 import cn.wj.android.cashbook.core.model.enums.MarkdownTypeEnum
 import cn.wj.android.cashbook.core.ui.DialogState
@@ -465,7 +468,6 @@ fun CashbookNavHost(
                     typeCategory = typeCategory,
                     defaultTypeId = defaultTypeId,
                     onTypeSelect = onTypeSelect,
-                    onRequestNaviToTypeManager = navController::naviToMyCategories,
                 )
             },
             assetBottomSheetContent = { currentTypeId, selectedAssetId, isRelated, onAssetChange ->
@@ -485,6 +487,7 @@ fun CashbookNavHost(
                 )
             },
             onRequestNaviToSelectRelatedRecord = navController::naviToSelectRelatedRecord,
+            onRequestNaviToTypeManager = navController::naviToMyCategories,
             onRequestPopBackStack = navController::popBackStackSafety,
         )
         // 选择关联记录
@@ -659,20 +662,17 @@ internal fun Verification(
                 val passwordMustNotBeBlankText =
                     stringResource(id = R.string.password_must_not_be_blank)
                 val passwordWrongText = stringResource(id = R.string.password_wrong)
-                val passwordFormatErrorText =
-                    stringResource(id = R.string.password_format_error)
                 val passwordDecodeFailedText =
                     stringResource(id = R.string.password_decode_failed)
 
                 val pwdTextFieldState = remember {
                     TextFieldState(
                         validator = {
-                            it.isNotBlank() && it.isMatch(PASSWORD_REGEX)
+                            it.isNotBlank()
                         },
                         errorFor = {
                             when {
                                 it.isBlank() -> passwordMustNotBeBlankText
-                                !it.isMatch(PASSWORD_REGEX) -> passwordFormatErrorText
                                 verifyState == SettingPasswordStateEnum.PASSWORD_WRONG -> passwordWrongText
                                 verifyState == SettingPasswordStateEnum.PASSWORD_DECODE_FAILED -> passwordDecodeFailedText
                                 else -> ""

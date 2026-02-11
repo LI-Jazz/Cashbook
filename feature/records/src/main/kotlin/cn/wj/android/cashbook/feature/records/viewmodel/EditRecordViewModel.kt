@@ -27,7 +27,6 @@ import cn.wj.android.cashbook.core.common.ext.toBigDecimalOrZero
 import cn.wj.android.cashbook.core.common.ext.toDoubleOrZero
 import cn.wj.android.cashbook.core.common.ext.withCNY
 import cn.wj.android.cashbook.core.common.tools.DATE_FORMAT_DATE
-import cn.wj.android.cashbook.core.common.tools.DATE_FORMAT_NO_SECONDS
 import cn.wj.android.cashbook.core.common.tools.dateFormat
 import cn.wj.android.cashbook.core.common.tools.parseDateLong
 import cn.wj.android.cashbook.core.data.repository.AssetRepository
@@ -37,6 +36,7 @@ import cn.wj.android.cashbook.core.data.repository.TagRepository
 import cn.wj.android.cashbook.core.data.repository.TypeRepository
 import cn.wj.android.cashbook.core.model.enums.ImageQualityEnum
 import cn.wj.android.cashbook.core.model.enums.RecordTypeCategoryEnum
+import cn.wj.android.cashbook.core.model.enums.TypeLevelEnum
 import cn.wj.android.cashbook.core.model.model.RecordModel
 import cn.wj.android.cashbook.core.model.model.TagModel
 import cn.wj.android.cashbook.core.ui.DialogState
@@ -182,7 +182,7 @@ class EditRecordViewModel @Inject constructor(
                 selectedAssetId = record.assetId,
                 assetText = assetText,
                 relatedAssetText = relatedAssetText,
-                dateTimeText = record.recordTime,
+                dateTimeText = record.recordTime.toDateOnlyText(),
                 reimbursable = record.reimbursable,
                 selectedTypeId = record.typeId,
                 needRelated = needRelated,
@@ -276,7 +276,6 @@ class EditRecordViewModel @Inject constructor(
             initialValue = "",
         )
 
-    private var amountSheetShowed = false
     private var recordIdInit = false
 
     /** 更新记录 [id]，刷新界面数据 */
@@ -286,14 +285,6 @@ class EditRecordViewModel @Inject constructor(
         }
         recordIdInit = true
         _recordIdData.tryEmit(id)
-        if (id == -1L && !amountSheetShowed) {
-            // 新建，自动显示输入框
-            amountSheetShowed = true
-            viewModelScope.launch {
-                delay(500L)
-                displayAmountSheet()
-            }
-        }
     }
 
     private var assetIdInit = false
@@ -445,45 +436,52 @@ class EditRecordViewModel @Inject constructor(
 
     /** 保存记录 */
     fun trySave(hintText: String, onSuccess: () -> Unit) {
-        if (inSave) {
-            return
-        }
-        inSave = true
         viewModelScope.launch {
-            val recordEntity = _displayRecordData.first()
-            if (recordEntity.amount.toDoubleOrZero() == 0.0) {
-                // 记录金额不能为 0
-                shouldDisplayBookmark = EditRecordBookmarkEnum.AMOUNT_MUST_NOT_BE_ZERO
+            if (inSave) {
                 return@launch
             }
-            // 支出分类
-            val typeCategory = selectedTypeCategoryData.first()
-            if (typeRepository.getNoNullRecordTypeById(recordEntity.typeId).typeCategory != typeCategory) {
-                // 类型与支出类型不匹配
-                shouldDisplayBookmark = EditRecordBookmarkEnum.TYPE_NOT_MATCH_CATEGORY
-                return@launch
-            }
-            val result = runCatchWithProgress(hint = hintText, cancelable = false) {
-                saveRecordUseCase(
-                    recordModel = recordEntity.copy(
-                        relatedAssetId = if (typeCategory != RecordTypeCategoryEnum.TRANSFER) -1L else recordEntity.relatedAssetId,
-                        concessions = if (typeCategory == RecordTypeCategoryEnum.INCOME) "" else recordEntity.concessions,
-                        reimbursable = if (typeCategory != RecordTypeCategoryEnum.EXPENDITURE) false else recordEntity.reimbursable,
-                    ),
-                    tagIdList = displayTagIdListData.first(),
-                    relatedRecordIdList = _relatedRecordIdData.first(),
-                    relatedImageList = displayImageData.first().map { it.asModel() },
-                )
-                Result.success(null)
-            }.getOrElse { throwable ->
-                // 保存失败
-                this@EditRecordViewModel.logger().e(throwable, "onSaveClick()")
-                shouldDisplayBookmark = EditRecordBookmarkEnum.SAVE_FAILED
-                Result.failure<Any>(throwable)
-            }
-            if (result.isSuccess) {
-                onSuccess.invoke()
-            } else {
+            inSave = true
+            try {
+                val recordEntity = _displayRecordData.first()
+                if (recordEntity.amount.toDoubleOrZero() == 0.0) {
+                    // 记录金额不能为 0
+                    shouldDisplayBookmark = EditRecordBookmarkEnum.AMOUNT_MUST_NOT_BE_ZERO
+                    return@launch
+                }
+                val typeModel = typeRepository.getNoNullRecordTypeById(recordEntity.typeId)
+                if (typeModel.typeLevel != TypeLevelEnum.SECOND) {
+                    // 未选择二级类型
+                    shouldDisplayBookmark = EditRecordBookmarkEnum.TYPE_MUST_SELECT_SECOND
+                    return@launch
+                }
+                // 支出分类
+                val typeCategory = selectedTypeCategoryData.first()
+                if (typeModel.typeCategory != typeCategory) {
+                    // 类型与支出类型不匹配
+                    shouldDisplayBookmark = EditRecordBookmarkEnum.TYPE_NOT_MATCH_CATEGORY
+                    return@launch
+                }
+                val result = runCatchWithProgress(hint = hintText, cancelable = false) {
+                    saveRecordUseCase(
+                        recordModel = recordEntity.copy(
+                            relatedAssetId = if (typeCategory != RecordTypeCategoryEnum.TRANSFER) -1L else recordEntity.relatedAssetId,
+                            concessions = if (typeCategory == RecordTypeCategoryEnum.INCOME) "" else recordEntity.concessions,
+                            reimbursable = if (typeCategory != RecordTypeCategoryEnum.EXPENDITURE) false else recordEntity.reimbursable,
+                            recordTime = recordEntity.recordTime.toDateOnlyText(),
+                        ),
+                        tagIdList = displayTagIdListData.first(),
+                        relatedRecordIdList = _relatedRecordIdData.first(),
+                        relatedImageList = displayImageData.first().map { it.asModel() },
+                    )
+                }
+                result
+                    .onSuccess { onSuccess.invoke() }
+                    .onFailure { throwable ->
+                        // 保存失败
+                        this@EditRecordViewModel.logger().e(throwable, "trySave()")
+                        shouldDisplayBookmark = EditRecordBookmarkEnum.SAVE_FAILED
+                    }
+            } finally {
                 inSave = false
             }
         }
@@ -498,46 +496,20 @@ class EditRecordViewModel @Inject constructor(
                     DialogState.Shown(
                         DateTimePickerModel.DatePicker(
                             currentState.dateTimeText.parseDateLong(
-                                format = DATE_FORMAT_NO_SECONDS,
+                                format = DATE_FORMAT_DATE,
                             ),
                         ),
                     )
             }
         }
     }
-
-    /** 日期临时保存，选择时间后才会真正保存 */
-    private var dateTemp = ""
 
     /** 选择日期 */
     fun onDateSelected(dateMs: Long) {
-        dateTemp = dateMs.dateFormat(DATE_FORMAT_DATE)
-        displayTimePickerDialog()
-    }
-
-    /** 显示选择时间弹窗 */
-    private fun displayTimePickerDialog() {
-        viewModelScope.launch {
-            val currentState = uiState.first()
-            if (currentState is EditRecordUiState.Success) {
-                dialogState =
-                    DialogState.Shown(
-                        DateTimePickerModel.TimePicker(
-                            currentState.dateTimeText.parseDateLong(
-                                format = DATE_FORMAT_NO_SECONDS,
-                            ),
-                        ),
-                    )
-            }
-        }
-    }
-
-    /** 选择时间 */
-    fun onTimeSelected(time: String) {
         dismissDialog()
         viewModelScope.launch {
             _mutableRecordData.tryEmit(
-                _displayRecordData.first().copy(recordTime = "$dateTemp $time"),
+                _displayRecordData.first().copy(recordTime = dateMs.dateFormat(DATE_FORMAT_DATE)),
             )
         }
     }
@@ -610,4 +582,8 @@ private fun String.clearZero(): String {
     } else {
         this
     }
+}
+
+private fun String.toDateOnlyText(): String {
+    return if (contains(" ")) substringBefore(" ") else this
 }

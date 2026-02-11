@@ -53,19 +53,16 @@ fun NavGraphBuilder.myCategoriesScreen(
  * @param typeCategory 记录大类
  * @param defaultTypeId 默认类型 id
  * @param onTypeSelect 类型选中回调
- * @param onRequestNaviToTypeManager 导航到类型管理
  */
 @Composable
 fun EditRecordTypeListContent(
     typeCategory: RecordTypeCategoryEnum,
     defaultTypeId: Long,
     onTypeSelect: (Long) -> Unit,
-    onRequestNaviToTypeManager: () -> Unit,
 ) {
     EditRecordTypeListRoute(
         typeCategory = typeCategory,
         defaultTypeId = defaultTypeId,
         onTypeSelect = onTypeSelect,
-        onRequestNaviToTypeManager = onRequestNaviToTypeManager,
     )
 }

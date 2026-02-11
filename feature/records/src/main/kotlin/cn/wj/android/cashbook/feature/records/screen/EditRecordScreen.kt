@@ -46,6 +46,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -56,10 +57,8 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -81,11 +80,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.wj.android.cashbook.core.common.ApplicationInfo
 import cn.wj.android.cashbook.core.common.IMAGE_MAX_COUNT
 import cn.wj.android.cashbook.core.common.Symbol
-import cn.wj.android.cashbook.core.common.ext.completeZero
 import cn.wj.android.cashbook.core.common.ext.withCNY
 import cn.wj.android.cashbook.core.common.tools.getCompressedBitmap
 import cn.wj.android.cashbook.core.design.component.Calculator
-import cn.wj.android.cashbook.core.design.component.CbAlertDialog
 import cn.wj.android.cashbook.core.design.component.CbFloatingActionButton
 import cn.wj.android.cashbook.core.design.component.CbHorizontalDivider
 import cn.wj.android.cashbook.core.design.component.CbIconButton
@@ -101,8 +98,10 @@ import cn.wj.android.cashbook.core.design.component.Loading
 import cn.wj.android.cashbook.core.design.component.TextFieldState
 import cn.wj.android.cashbook.core.design.component.rememberSnackbarHostState
 import cn.wj.android.cashbook.core.design.icon.CbIcons
+import cn.wj.android.cashbook.core.design.preview.PreviewTheme
 import cn.wj.android.cashbook.core.model.enums.ImageQualityEnum
 import cn.wj.android.cashbook.core.model.enums.RecordTypeCategoryEnum
+import cn.wj.android.cashbook.core.ui.DevicePreviews
 import cn.wj.android.cashbook.core.ui.DialogState
 import cn.wj.android.cashbook.core.ui.R
 import cn.wj.android.cashbook.core.ui.expand.text
@@ -121,7 +120,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.io.File
-import java.util.Calendar
 
 /**
  * 编辑记录
@@ -131,6 +129,7 @@ import java.util.Calendar
  * @param typeListContent 类型列表布局，参数：(类型大类, 默认类型 id, 类型选择回调) -> [Unit]
  * @param assetBottomSheetContent 选择资产抽屉布局，参数：(已选择类型id, 已选择资产id, 是否是关联资产, 资产选择回调) -> [Unit]
  * @param tagBottomSheetContent 选择标签抽屉布局，参数：(已选择标签id列表, 标签id列表变化回调) -> [Unit]
+ * @param onRequestNaviToTypeManager 导航到类型管理
  * @param onRequestPopBackStack 导航到上一级
  */
 @Composable
@@ -141,6 +140,7 @@ internal fun EditRecordRoute(
     assetBottomSheetContent: @Composable (Long, Long, Boolean, (Long) -> Unit) -> Unit,
     tagBottomSheetContent: @Composable (List<Long>, (List<Long>) -> Unit, () -> Unit) -> Unit,
     onRequestNaviToSelectRelatedRecord: () -> Unit,
+    onRequestNaviToTypeManager: () -> Unit,
     onRequestPopBackStack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: EditRecordViewModel = hiltViewModel<EditRecordViewModel>().apply {
@@ -163,7 +163,6 @@ internal fun EditRecordRoute(
         onRequestDismissDialog = viewModel::dismissDialog,
         onRecordTimeClick = viewModel::displayDatePickerDialog,
         onDateSelected = viewModel::onDateSelected,
-        onTimeSelected = viewModel::onTimeSelected,
         shouldDisplayBookmark = viewModel.shouldDisplayBookmark,
         onRequestDismissBookmark = viewModel::dismissBookmark,
         onBackClick = onRequestPopBackStack,
@@ -230,6 +229,7 @@ internal fun EditRecordRoute(
                 onSuccess = onRequestPopBackStack,
             )
         },
+        onTypeSettingsClick = onRequestNaviToTypeManager,
         modifier = modifier,
     )
 }
@@ -244,7 +244,6 @@ internal fun EditRecordRoute(
  * @param onRequestDismissDialog 隐藏弹窗
  * @param onRecordTimeClick 记录时间点击回调
  * @param onDateSelected 日期选择确认回调
- * @param onTimeSelected 时间选择确认回调
  * @param selectedTypeCategory 已选择大类
  * @param onTypeCategorySelect 记录大类修改回调
  * @param bottomSheetType 底部抽屉类型
@@ -267,6 +266,7 @@ internal fun EditRecordRoute(
  * @param onReimbursableClick 可报销点击回调
  * @param onSaveClick 保存点击回调
  * @param onBackClick 返回点击回调
+ * @param onTypeSettingsClick 类型设置点击回调
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -278,7 +278,6 @@ internal fun EditRecordScreen(
     onRequestDismissDialog: () -> Unit,
     onRecordTimeClick: () -> Unit,
     onDateSelected: (Long) -> Unit,
-    onTimeSelected: (String) -> Unit,
     selectedTypeCategory: RecordTypeCategoryEnum,
     onTypeCategorySelect: (RecordTypeCategoryEnum) -> Unit,
     bottomSheetType: EditRecordBottomSheetEnum,
@@ -306,18 +305,21 @@ internal fun EditRecordScreen(
     onReimbursableClick: () -> Unit,
     onSaveClick: () -> Unit,
     onBackClick: () -> Unit,
+    onTypeSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = rememberSnackbarHostState(),
 ) {
     // 提示文本
     val amountMustNotBeNullText = stringResource(id = R.string.amount_must_not_be_zero)
     val typeErrorText = stringResource(id = R.string.please_select_type)
+    val secondTypeErrorText = stringResource(id = R.string.please_select_second_type)
     val saveFailedText = stringResource(id = R.string.save_failure)
     LaunchedEffect(shouldDisplayBookmark) {
         if (shouldDisplayBookmark != EditRecordBookmarkEnum.NONE) {
             val tipText = when (shouldDisplayBookmark) {
                 EditRecordBookmarkEnum.AMOUNT_MUST_NOT_BE_ZERO -> amountMustNotBeNullText
                 EditRecordBookmarkEnum.TYPE_NOT_MATCH_CATEGORY, EditRecordBookmarkEnum.TYPE_MUST_NOT_BE_NULL -> typeErrorText
+                EditRecordBookmarkEnum.TYPE_MUST_SELECT_SECOND -> secondTypeErrorText
                 EditRecordBookmarkEnum.SAVE_FAILED -> saveFailedText
                 else -> ""
             }
@@ -425,37 +427,6 @@ internal fun EditRecordScreen(
                             }
                         }
 
-                        is DateTimePickerModel.TimePicker -> {
-                            val currentTime = Calendar.getInstance().apply {
-                                timeInMillis = model.timeMs
-                            }
-                            val timePickerState = rememberTimePickerState(
-                                initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
-                                initialMinute = currentTime.get(Calendar.MINUTE),
-                                is24Hour = true,
-                            )
-                            CbAlertDialog(
-                                onDismissRequest = onRequestDismissDialog,
-                                confirmButton = {
-                                    CbTextButton(
-                                        onClick = {
-                                            onTimeSelected("${timePickerState.hour.completeZero()}:${timePickerState.minute.completeZero()}")
-                                        },
-                                    ) {
-                                        Text(text = stringResource(id = R.string.confirm))
-                                    }
-                                },
-                                dismissButton = {
-                                    CbTextButton(onClick = onRequestDismissDialog) {
-                                        Text(text = stringResource(id = R.string.cancel))
-                                    }
-                                },
-                                text = {
-                                    TimePicker(state = timePickerState)
-                                },
-                            )
-                        }
-
                         is ImagePreviewData -> {
                             ImagePreviewDialog(
                                 onRequestDismissDialog = onRequestDismissDialog,
@@ -471,6 +442,7 @@ internal fun EditRecordScreen(
                     typeListContent = typeListContent,
                     selectedTypeCategory = selectedTypeCategory,
                     typeColor = selectedTypeCategory.typeColor,
+                    onTypeSettingsClick = onTypeSettingsClick,
                     onAmountClick = onAmountClick,
                     onRemarkChange = onRemarkChange,
                     onAssetClick = onAssetClick,
@@ -507,6 +479,7 @@ internal fun EditRecordScreen(
  * @param onTagClick 标签点击回调
  * @param onReimbursableClick 可报销点击回调
  * @param onRecordTimeClick 记录时间点击回调
+ * @param onTypeSettingsClick 类型设置点击回调
  */
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
@@ -528,6 +501,7 @@ private fun EditRecordScaffoldContent(
     onConcessionsClick: () -> Unit,
     onRelatedRecordClick: () -> Unit,
     onRecordTimeClick: () -> Unit,
+    onTypeSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -553,15 +527,6 @@ private fun EditRecordScaffoldContent(
                         onAmountClick = onAmountClick,
                     )
                     CbHorizontalDivider()
-                    Text(
-                        text = stringResource(id = R.string.record_type),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
-                    )
-
-                    // 类型列表
-                    typeListContent()
 
                     // 备注文本
                     val remarkTextState = remember {
@@ -574,15 +539,7 @@ private fun EditRecordScaffoldContent(
                         )
                     }
 
-                    // 备注信息
-                    CbTextField(
-                        textFieldState = remarkTextState,
-                        label = { Text(text = stringResource(id = R.string.remark)) },
-                        colors = OutlinedTextFieldDefaults.colors(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                    )
+
 
                     // 其他选项
                     FlowRow(
@@ -696,6 +653,26 @@ private fun EditRecordScaffoldContent(
                             )
                         }
                     }
+
+                    ElevatedFilterChip(
+                        selected = false,
+                        onClick = onTypeSettingsClick,
+                        label = { Text(text = stringResource(id = R.string.settings)) },
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+
+                    // 备注信息
+                    CbTextField(
+                        textFieldState = remarkTextState,
+                        label = { Text(text = stringResource(id = R.string.remark)) },
+                        colors = OutlinedTextFieldDefaults.colors(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                    )
+
+                    // 类型列表
+                    typeListContent()
                 }
             }
         }
@@ -1054,6 +1031,109 @@ internal fun EditRecordTopBar(
     )
 }
 
+@DevicePreviews
+@Composable
+private fun EditRecordRoutePreview() {
+    PreviewTheme {
+        EditRecordScreen(
+            uiState = EditRecordUiState.Success(
+                amountText = "66.6",
+                chargesText = "0",
+                concessionsText = "5",
+                remarkText = "晚餐",
+                selectedAssetId = 1L,
+                assetText = "微信",
+                relatedAssetText = "银行卡",
+                dateTimeText = "2026-02-11",
+                reimbursable = true,
+                selectedTypeId = 101L,
+                needRelated = false,
+                relatedCount = 0,
+                relatedAmount = "0",
+                imageQuality = ImageQualityEnum.MEDIUM,
+            ),
+            shouldDisplayBookmark = EditRecordBookmarkEnum.NONE,
+            onRequestDismissBookmark = {},
+            dialogState = DialogState.Dismiss,
+            onRequestDismissDialog = {},
+            onRecordTimeClick = {},
+            onDateSelected = {},
+            selectedTypeCategory = RecordTypeCategoryEnum.EXPENDITURE,
+            onTypeCategorySelect = {},
+            bottomSheetType = EditRecordBottomSheetEnum.NONE,
+            onRequestDismissBottomSheet = {},
+            onAmountClick = {},
+            onAmountChange = {},
+            onChargesClick = {},
+            onChargesChange = {},
+            onConcessionsClick = {},
+            onRelatedRecordClick = {},
+            onConcessionsChange = {},
+            onImageItemClick = { _, _ -> },
+            onImageListSave = {},
+            typeListContent = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    val typeColor = RecordTypeCategoryEnum.EXPENDITURE.typeColor
+                    val typeGroups = listOf(
+                        "餐饮" to listOf("早餐", "午餐", "晚餐", "夜宵", "零食", "外卖"),
+                        "交通" to listOf("公交", "地铁", "打车", "加油", "停车", "过路费"),
+                        "购物" to listOf("衣服", "数码", "家电", "日用品", "化妆品", "书籍"),
+                        "居家" to listOf("水费", "电费", "燃气", "房租", "物业", "网络"),
+                        "娱乐" to listOf("电影", "游戏", "KTV", "旅行", "健身", "演出"),
+                    )
+
+                    typeGroups.forEachIndexed { firstIndex, (first, seconds) ->
+                        Text(
+                            text = first,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                        )
+
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            seconds.forEachIndexed { secondIndex, second ->
+                                val selected = firstIndex == 0 && secondIndex == 1
+                                ElevatedFilterChip(
+                                    selected = selected,
+                                    onClick = {},
+                                    label = { Text(text = second) },
+                                    shape = RoundedCornerShape(6.dp),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = typeColor,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        labelColor = MaterialTheme.colorScheme.onSurface,
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            onRemarkChange = {},
+            onAssetClick = {},
+            onRelatedAssetClick = {},
+            selectAssetBottomSheetContent = {},
+            selectRelatedAssetBottomSheetContent = {},
+            tagText = "午餐, 外卖",
+            imageList = emptyList(),
+            onTagClick = {},
+            onImageClick = {},
+            selectTagBottomSheetContent = {},
+            onReimbursableClick = {},
+            onSaveClick = {},
+            onBackClick = {},
+            onTypeSettingsClick = {},
+        )
+    }
+}
+
 /**
  * 金额显示框
  *
@@ -1070,19 +1150,20 @@ internal fun Amount(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onAmountClick),
+            .clickable(onClick = onAmountClick)
+            .padding(vertical = 16.dp), // 增加垂直内边距,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = Symbol.CNY,
             color = primaryColor,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleLarge,
         )
         Text(
             text = amount,
             color = primaryColor,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(8.dp),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(10.dp),
         )
     }
 }

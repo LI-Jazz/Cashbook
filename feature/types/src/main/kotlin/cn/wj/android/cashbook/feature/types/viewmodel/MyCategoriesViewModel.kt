@@ -223,10 +223,12 @@ class MyCategoriesViewModel @Inject constructor(
 
     fun requestEditType(id: Long, parentId: Long) {
         viewModelScope.launch {
+            val type = typeRepository.getRecordTypeById(id)
+            val effectiveParentId = type?.parentId ?: parentId
             dialogState = DialogState.Shown(
                 MyCategoriesDialogData.EditType(
-                    type = typeRepository.getRecordTypeById(id),
-                    parentType = typeRepository.getRecordTypeById(parentId),
+                    type = type,
+                    parentType = typeRepository.getRecordTypeById(effectiveParentId),
                 ),
             )
         }
@@ -234,12 +236,20 @@ class MyCategoriesViewModel @Inject constructor(
 
     fun saveRecordType(id: Long, parentId: Long, name: String, iconName: String) {
         viewModelScope.launch {
-            var count = typeRepository.countByName(name)
             val recordTypeById = typeRepository.getRecordTypeById(id)
+            var count = typeRepository.countByName(name)
             if (recordTypeById?.name == name) {
                 count--
             }
-            if (count > 0) {
+            val allowDuplicateWithParentOrChild = recordTypeById?.let { current ->
+                if (current.parentId == -1L) {
+                    typeRepository.getSecondRecordTypeListByParentId(current.id)
+                        .any { it.name == name }
+                } else {
+                    typeRepository.getRecordTypeById(current.parentId)?.name == name
+                }
+            } ?: false
+            if (count > 0 && !(allowDuplicateWithParentOrChild && count == 1)) {
                 // 类型名称不能相同
                 shouldDisplayBookmark = MyCategoriesBookmarkEnum.DUPLICATE_TYPE_NAME
             } else {
@@ -262,7 +272,24 @@ class MyCategoriesViewModel @Inject constructor(
                     name = name,
                     iconName = iconName,
                 )
-                typeRepository.update(model)
+                val isNewFirstType = recordTypeById == null && parentId == -1L
+                if (isNewFirstType) {
+                    val newParentId = typeRepository.insertAndReturnId(model)
+                    val secondModel = RecordTypeModel(
+                        id = -1L,
+                        parentId = newParentId,
+                        name = name,
+                        iconName = iconName,
+                        typeLevel = TypeLevelEnum.SECOND,
+                        typeCategory = _selectedTabData.first(),
+                        protected = false,
+                        sort = typeRepository.generateSortById(-1L, newParentId),
+                        needRelated = false,
+                    )
+                    typeRepository.update(secondModel)
+                } else {
+                    typeRepository.update(model)
+                }
             }
             dismissDialog()
         }
