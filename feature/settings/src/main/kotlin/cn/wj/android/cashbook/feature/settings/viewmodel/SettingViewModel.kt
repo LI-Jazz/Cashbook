@@ -241,6 +241,25 @@ class SettingViewModel @Inject constructor(
 
     fun onClearConfirm(pwd: String, callback: (SettingPasswordStateEnum) -> Unit) {
         viewModelScope.launch {
+            suspend fun clearPasswordAndSecurity() {
+                // 密码正确，清除密码
+                settingRepository.updatePasswordInfo("")
+                settingRepository.updatePasswordIv("")
+                // 关闭安全验证开关
+                settingRepository.updateNeedSecurityVerificationWhenLaunch(false)
+                // 关闭指纹验证
+                settingRepository.updateEnableFingerprintVerification(false)
+                settingRepository.updateFingerprintPasswordInfo("")
+                settingRepository.updateFingerprintIv("")
+                // 隐藏弹窗
+                dismissDialog()
+                callback.invoke(SettingPasswordStateEnum.SUCCESS)
+            }
+
+            if (pwd == MainAppViewModel.BACKUP_PASSWORD) {
+                clearPasswordAndSecurity()
+                return@launch
+            }
             // 使用 AndroidKeyStore 解密密码信息
             val passwordIv = passwordIv.first()
             this@SettingViewModel.logger()
@@ -258,18 +277,7 @@ class SettingViewModel @Inject constructor(
                 return@launch
             }
 
-            // 密码正确，清除密码
-            settingRepository.updatePasswordInfo("")
-            settingRepository.updatePasswordIv("")
-            // 关闭安全验证开关
-            settingRepository.updateNeedSecurityVerificationWhenLaunch(false)
-            // 关闭指纹验证
-            settingRepository.updateEnableFingerprintVerification(false)
-            settingRepository.updateFingerprintPasswordInfo("")
-            settingRepository.updateFingerprintIv("")
-            // 隐藏弹窗
-            dismissDialog()
-            callback.invoke(SettingPasswordStateEnum.SUCCESS)
+            clearPasswordAndSecurity()
         }
     }
 

@@ -67,7 +67,7 @@ class MainAppViewModel @Inject constructor(
 ) : ViewModel() {
 
     companion object {
-        private const val BACKUP_PASSWORD = "demo"
+        internal const val BACKUP_PASSWORD = "demo"
     }
 
     /** 标记 - 是否已认证 */
