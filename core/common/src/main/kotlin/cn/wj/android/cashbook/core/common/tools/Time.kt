@@ -23,6 +23,7 @@ import cn.wj.android.cashbook.core.common.ext.logger
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -126,4 +127,21 @@ fun Long.toLocalDate(): LocalDate {
 
 fun LocalDate.toMs(): Long {
     return atStartOfDay(ZoneOffset.systemDefault()).toInstant().toEpochMilli()
+}
+
+fun Long.toWeekdayText(): String {
+    return when (toLocalDate().dayOfWeek) {
+        DayOfWeek.MONDAY -> "周一"
+        DayOfWeek.TUESDAY -> "周二"
+        DayOfWeek.WEDNESDAY -> "周三"
+        DayOfWeek.THURSDAY -> "周四"
+        DayOfWeek.FRIDAY -> "周五"
+        DayOfWeek.SATURDAY -> "周六"
+        DayOfWeek.SUNDAY -> "周日"
+    }
+}
+
+@JvmOverloads
+fun String.toWeekdayText(format: String = DATE_FORMAT_DATE): String {
+    return parseDateLong(format).toWeekdayText()
 }

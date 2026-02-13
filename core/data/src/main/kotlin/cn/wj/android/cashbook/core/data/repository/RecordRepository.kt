@@ -22,6 +22,7 @@ import cn.wj.android.cashbook.core.common.ext.toDoubleOrZero
 import cn.wj.android.cashbook.core.common.tools.DATE_FORMAT_DATE
 import cn.wj.android.cashbook.core.common.tools.dateFormat
 import cn.wj.android.cashbook.core.common.tools.parseDateLong
+import cn.wj.android.cashbook.core.common.tools.toWeekdayText
 import cn.wj.android.cashbook.core.database.table.ImageWithRelatedTable
 import cn.wj.android.cashbook.core.database.table.RecordTable
 import cn.wj.android.cashbook.core.model.model.ImageModel
@@ -117,6 +118,11 @@ interface RecordRepository {
 }
 
 internal fun RecordTable.asModel(): RecordModel {
+    val weekday = if (this.recordWeekday.isNotBlank()) {
+        this.recordWeekday
+    } else {
+        this.recordTime.toWeekdayText()
+    }
     return RecordModel(
         id = this.id ?: -1L,
         booksId = this.booksId,
@@ -130,6 +136,7 @@ internal fun RecordTable.asModel(): RecordModel {
         remark = this.remark,
         reimbursable = this.reimbursable == SWITCH_INT_ON,
         recordTime = this.recordTime.dateFormat(DATE_FORMAT_DATE),
+        recordWeekday = weekday,
     )
 }
 
@@ -147,6 +154,7 @@ internal fun RecordModel.asTable(): RecordTable {
         remark = this.remark,
         reimbursable = if (this.reimbursable) SWITCH_INT_ON else SWITCH_INT_OFF,
         recordTime = this.recordTime.parseDateLong(DATE_FORMAT_DATE),
+        recordWeekday = this.recordTime.toWeekdayText(DATE_FORMAT_DATE),
     )
 }
 

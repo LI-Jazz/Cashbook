@@ -89,6 +89,7 @@ class RecordModelTransToViewsUseCase @Inject constructor(
                 relatedRecord = relatedRecord,
                 relatedAmount = totalRelated.decimalFormat(),
                 recordTime = recordModel.recordTime,
+                recordWeekday = recordModel.recordWeekday,
             )
         }
 }

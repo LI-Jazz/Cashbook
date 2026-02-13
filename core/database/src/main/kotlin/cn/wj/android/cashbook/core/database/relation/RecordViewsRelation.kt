@@ -31,4 +31,5 @@ data class RecordViewsRelation(
     val remark: String,
     val reimbursable: Int,
     val recordTime: Long,
+    val recordWeekday: String,
 )

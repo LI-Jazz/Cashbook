@@ -35,6 +35,7 @@ import androidx.room.PrimaryKey
  * @param remark 备注
  * @param reimbursable 能否报销
  * @param recordTime 修改时间
+ * @param recordWeekday 星期几
  *
  * > [王杰](mailto:15555650921@163.com) 创建于 2021/6/10
  */
@@ -54,4 +55,5 @@ data class RecordTable(
     @ColumnInfo(name = TABLE_RECORD_REMARK) val remark: String,
     @ColumnInfo(name = TABLE_RECORD_REIMBURSABLE) val reimbursable: Int,
     @ColumnInfo(name = TABLE_RECORD_RECORD_TIME) val recordTime: Long,
+    @ColumnInfo(name = TABLE_RECORD_WEEKDAY) val recordWeekday: String,
 )

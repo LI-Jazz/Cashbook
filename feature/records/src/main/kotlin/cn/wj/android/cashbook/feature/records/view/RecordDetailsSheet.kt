@@ -416,10 +416,20 @@ internal fun RecordDetailsSheet(
                     CbListItem(
                         headlineContent = { Text(text = stringResource(id = R.string.time)) },
                         trailingContent = {
-                            Text(
-                                text = recordData.recordTime,
-                                style = MaterialTheme.typography.labelLarge,
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.End,
+                            ) {
+                                Text(
+                                    text = recordData.recordTime,
+                                    style = MaterialTheme.typography.labelLarge,
+                                )
+                                if (recordData.recordWeekday.isNotBlank()) {
+                                    Text(
+                                        text = recordData.recordWeekday,
+                                        style = MaterialTheme.typography.labelMedium,
+                                    )
+                                }
+                            }
                         },
                     )
                 }

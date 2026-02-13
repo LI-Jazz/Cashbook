@@ -27,6 +27,7 @@ import cn.wj.android.cashbook.core.common.model.updateVersion
 import cn.wj.android.cashbook.core.common.tools.DATE_FORMAT_DATE
 import cn.wj.android.cashbook.core.common.tools.dateFormat
 import cn.wj.android.cashbook.core.common.tools.parseDateLong
+import cn.wj.android.cashbook.core.common.tools.toWeekdayText
 import cn.wj.android.cashbook.core.data.repository.RecordRepository
 import cn.wj.android.cashbook.core.data.repository.asModel
 import cn.wj.android.cashbook.core.data.repository.asTable
@@ -245,6 +246,7 @@ class RecordRepositoryImpl @Inject constructor(
     override suspend fun getDefaultRecord(typeId: Long): RecordModel =
         withContext(coroutineContext) {
             val appDataModel = combineProtoDataSource.recordSettingsData.first()
+            val now = System.currentTimeMillis()
             RecordModel(
                 id = -1L,
                 booksId = appDataModel.currentBookId,
@@ -257,7 +259,8 @@ class RecordRepositoryImpl @Inject constructor(
                 concessions = "",
                 remark = "",
                 reimbursable = false,
-                recordTime = System.currentTimeMillis().dateFormat(DATE_FORMAT_DATE),
+                recordTime = now.dateFormat(DATE_FORMAT_DATE),
+                recordWeekday = now.toWeekdayText(),
             )
         }
 

@@ -32,6 +32,7 @@ import cn.wj.android.cashbook.core.model.model.TagModel
  * @param remark 备注
  * @param reimbursable 能否报销
  * @param recordTime 修改时间
+ * @param recordWeekday 星期几
  *
  * > [王杰](mailto:15555650921@163.com) 创建于 2021/6/10
  */
@@ -57,6 +58,7 @@ data class RecordViewsEntity(
     val relatedRecord: List<RecordModel>,
     val relatedAmount: String,
     val recordTime: String,
+    val recordWeekday: String,
 ) : RecordViews {
     val isBalanceAccount: Boolean
         get() = typeName == RECORD_TYPE_BALANCE_EXPENDITURE.name

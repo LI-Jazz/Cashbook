@@ -31,6 +31,7 @@ package cn.wj.android.cashbook.core.model.entity
  * @param remark 备注
  * @param reimbursable 能否报销
  * @param recordTime 修改时间
+ * @param recordWeekday 星期几
  *
  * > [王杰](mailto:15555650921@163.com) 创建于 2021/6/10
  */
@@ -47,4 +48,5 @@ data class RecordEntity(
     val remark: String,
     val reimbursable: Boolean,
     val recordTime: String,
+    val recordWeekday: String,
 )

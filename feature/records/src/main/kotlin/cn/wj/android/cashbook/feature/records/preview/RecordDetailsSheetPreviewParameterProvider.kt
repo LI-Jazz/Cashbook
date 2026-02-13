@@ -42,7 +42,7 @@ object RecordDetailsSheetData {
     )
 
     private val relatedRecordList = listOf(
-        RecordModel(1L, 1L, 1L, 1L, 1L, "20", "", "", "", "", false, "2024-01-01"),
+        RecordModel(1L, 1L, 1L, 1L, 1L, "20", "", "", "", "", false, "2024-01-01", "周一"),
     )
 
     private val nullRecordViewsData: RecordViewsEntity? = null
@@ -69,6 +69,7 @@ object RecordDetailsSheetData {
         relatedRecord = emptyList(),
         relatedAmount = "",
         recordTime = "2024-04-01",
+        recordWeekday = "周一",
     )
 
     private val reimbursedExpenditureRecordViewsData = RecordViewsEntity(
@@ -93,6 +94,7 @@ object RecordDetailsSheetData {
         relatedRecord = relatedRecordList,
         relatedAmount = "20",
         recordTime = "2024-04-01",
+        recordWeekday = "周一",
     )
 
     private val reimbursableExpenditureRecordViewsData = RecordViewsEntity(
@@ -117,6 +119,7 @@ object RecordDetailsSheetData {
         relatedRecord = emptyList(),
         relatedAmount = "",
         recordTime = "2024-04-01",
+        recordWeekday = "周一",
     )
 
     private val refundExpenditureRecordViewsData = RecordViewsEntity(
@@ -141,6 +144,7 @@ object RecordDetailsSheetData {
         relatedRecord = relatedRecordList,
         relatedAmount = "20",
         recordTime = "2024-04-01",
+        recordWeekday = "周一",
     )
 
     private val incomeRecordViewsData = RecordViewsEntity(
@@ -165,6 +169,7 @@ object RecordDetailsSheetData {
         relatedRecord = emptyList(),
         relatedAmount = "",
         recordTime = "2024-04-01",
+        recordWeekday = "周一",
     )
 
     private val refundIncomeRecordViewsData = RecordViewsEntity(
@@ -189,6 +194,7 @@ object RecordDetailsSheetData {
         relatedRecord = relatedRecordList,
         relatedAmount = "2000",
         recordTime = "2024-04-01",
+        recordWeekday = "周一",
     )
 
     private val reimbursedIncomeRecordViewsData = RecordViewsEntity(
@@ -213,6 +219,7 @@ object RecordDetailsSheetData {
         relatedRecord = relatedRecordList,
         relatedAmount = "20",
         recordTime = "2024-04-01",
+        recordWeekday = "周一",
     )
 
     private val transferRecordViewsData = RecordViewsEntity(
@@ -237,6 +244,7 @@ object RecordDetailsSheetData {
         relatedRecord = emptyList(),
         relatedAmount = "",
         recordTime = "2024-04-01",
+        recordWeekday = "周一",
     )
 
     val recordViewsList = arrayListOf(
