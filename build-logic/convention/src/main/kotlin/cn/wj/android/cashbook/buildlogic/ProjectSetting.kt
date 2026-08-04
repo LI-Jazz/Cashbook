@@ -38,7 +38,7 @@ object ProjectSetting {
         const val COMPILE_SDK = 35
 
         /** SDK 最小支持版本 */
-        const val MIN_SDK = 24
+        const val MIN_SDK = 26
 
         /** SDK 目标版本 */
         const val TARGET_SDK = 35

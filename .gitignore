@@ -95,3 +95,6 @@ RELEASE.md
 
 # 输出路径
 /outputs
+
+/docs
+*.DS_Store
